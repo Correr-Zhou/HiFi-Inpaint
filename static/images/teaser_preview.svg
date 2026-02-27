@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="70" y="70" width="1060" height="490" rx="32" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+  <text x="100" y="200" fill="#ffffff" font-size="64" font-family="Outfit, Inter, Arial, sans-serif" font-weight="800">
+    HiFi-Inpaint
+  </text>
+  <text x="100" y="285" fill="#ffffff" font-size="32" font-family="Inter, Arial, sans-serif">
+    High-Fidelity Reference-Based Inpainting
+  </text>
+  <text x="100" y="355" fill="#ffffff" font-size="28" font-family="Inter, Arial, sans-serif">
+    Detail-Preserving Human-Product Images
+  </text>
+  <text x="100" y="445" fill="#ffffff" font-size="26" font-family="Inter, Arial, sans-serif" opacity="0.9">
+    Accepted at CVPR 2026
+  </text>
+</svg>

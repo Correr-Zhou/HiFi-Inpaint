@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HiFi-Inpaint: Towards High-Fidelity Reference-Based Inpainting for Detail-Preserving Human-Product Images</title>
+  <meta name="description" content="HiFi-Inpaint: a high-fidelity reference-based inpainting framework for generating detail-preserving human-product images. Accepted at CVPR 2026.">
+  <meta name="keywords" content="HiFi-Inpaint, Reference-Based Inpainting, Human-Product Images, Diffusion, CVPR 2026">
+  <meta name="author" content="Yichen Liu, Donghao Zhou, Jie Wang, Xin Gao, Guisheng Liu, Jiatong Li, Quanwei Zhang, Qiang Lyu, Lanqing Guo, Shilei Wen, Weiqiang Wang, Pheng-Ann Heng">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="HiFi-Inpaint Project Page">
+  <meta property="og:title" content="HiFi-Inpaint: Towards High-Fidelity Reference-Based Inpainting for Detail-Preserving Human-Product Images">
+  <meta property="og:description" content="HiFi-Inpaint is a high-fidelity reference-based inpainting framework for generating detail-preserving human-product images. Accepted at CVPR 2026.">
+  <meta property="og:image" content="static/images/teaser_preview.svg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="HiFi-Inpaint: Towards High-Fidelity Reference-Based Inpainting for Detail-Preserving Human-Product Images">
+  <meta name="twitter:description" content="HiFi-Inpaint is a high-fidelity reference-based inpainting framework for generating detail-preserving human-product images. Accepted at CVPR 2026.">
+  <meta name="twitter:image" content="static/images/teaser_preview.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "HiFi-Inpaint: Towards High-Fidelity Reference-Based Inpainting for Detail-Preserving Human-Product Images",
+    "description": "HiFi-Inpaint is a high-fidelity reference-based inpainting framework for generating detail-preserving human-product images.",
+    "author": [
+      { "@type": "Person", "name": "Yichen Liu" },
+      { "@type": "Person", "name": "Donghao Zhou" },
+      { "@type": "Person", "name": "Jie Wang" },
+      { "@type": "Person", "name": "Xin Gao" },
+      { "@type": "Person", "name": "Guisheng Liu" },
+      { "@type": "Person", "name": "Jiatong Li" },
+      { "@type": "Person", "name": "Quanwei Zhang" },
+      { "@type": "Person", "name": "Qiang Lyu" },
+      { "@type": "Person", "name": "Lanqing Guo" },
+      { "@type": "Person", "name": "Shilei Wen" },
+      { "@type": "Person", "name": "Weiqiang Wang" },
+      { "@type": "Person", "name": "Pheng-Ann Heng" }
+    ],
+    "datePublished": "2026-02-25",
+    "image": "static/images/teaser_preview.svg"
+  }
+  </script>
+</head>
+<body>
+  <div class="cursor-glow"></div>
+
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="logo">
+        <span class="logo-text">HiFi-Inpaint</span>
+      </a>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="#abstract">Abstract</a>
+        <a href="#methodology">Methodology</a>
+        <a href="#experiments">Experiments</a>
+        <a href="#bibtex">BibTeX</a>
+        <div class="dropdown">
+          <button class="dropbtn">More Works <i class="fas fa-chevron-down"></i></button>
+          <div class="dropdown-content">
+            <a href="https://correr-zhou.github.io/IdentityStory/" target="_blank">IdentityStory</a>
+            <a href="https://lulupig12138.github.io/SceneDecorator/" target="_blank">SceneDecorator</a>
+            <a href="https://correr-zhou.github.io/MagicTailor/" target="_blank">MagicTailor</a>
+          </div>
+        </div>
+        <button id="theme-toggle" aria-label="Toggle Dark Mode">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container">
+      <h1 class="title"><span class="gradient-text">Hi</span><span class="gradient-text">Fi</span>-<span class="gradient-text">Inpaint</span>: Towards <span class="gradient-text">Hi</span>gh-<span class="gradient-text">Fi</span>delity Reference-Based <span class="gradient-text">Inpaint</span>ing for Generating Detail-Preserving Human-Product Images</h1>
+      <div class="venue">
+        <span class="venue-badge">CVPR 2026</span>
+      </div>
+      <div class="authors">
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Yichen Liu</a><sup>1,*</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Donghao Zhou</a><sup>2,*</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Jie Wang</a><sup>3</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Xin Gao</a><sup>3</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Guisheng Liu</a><sup>3</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Jiatong Li</a><sup>3,†</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Quanwei Zhang</a><sup>4</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Qiang Lyu</a><sup>1</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Lanqing Guo</a><sup>5</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Shilei Wen</a><sup>3</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Weiqiang Wang</a><sup>1,§</sup></span>
+        <span class="author"><a href="https://correr-zhou.github.io" target="_blank">Pheng-Ann Heng</a><sup>2,§</sup></span>
+      </div>
+      <div class="affiliations">
+        <span class="author-block"><sup>1</sup>University of Chinese Academy of Sciences</span>
+        <span class="affil-sep">•</span>
+        <span class="author-block"><sup>2</sup>The Chinese University of Hong Kong</span><br>
+        <span class="author-block"><sup>3</sup>ByteDance</span>
+        <span class="affil-sep">•</span>
+        <span class="author-block"><sup>4</sup>Zhejiang University</span>
+        <span class="affil-sep">•</span>
+        <span class="author-block"><sup>5</sup>UT Austin</span>
+      </div>
+      <div class="author-notes">
+        <span>* Equal contribution</span>
+        <span>† Project lead</span>
+        <span><sup>§</sup> Corresponding author</span>
+      </div>
+      <div class="links">
+        <a href="#" class="btn btn-primary">
+          <i class="fas fa-file-pdf"></i> Paper (Coming Soon)
+        </a>
+        <a href="#" class="btn btn-secondary">
+          <img src="static/images/huggingface.svg" alt="Hugging Face" class="btn-icon"> Dataset (Coming Soon)
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="teaser">
+    <div class="container">
+      <div class="image-container teaser-container">
+        <img src="static/images/teaser.jpg" alt="HiFi-Inpaint Teaser" class="teaser-img lightbox-trigger" data-title="Generated results of HiFi-Inpaint">
+      </div>
+      <p class="caption">
+        We propose <strong>HiFi-Inpaint</strong>, a DiT-based framework that can seamlessly integrate product reference images into masked human images, generating high-quality human-product images with high-fidelity detail preservation.
+      </p>
+    </div>
+  </section>
+
+  <section id="abstract" class="section">
+    <div class="container">
+      <h2 class="section-title">Abstract</h2>
+      <div class="content-box">
+        <p>
+          Human-product images, which showcase the integration of humans and products, play a vital role in advertising, e-commerce, and digital marketing. The essential challenge of generating such images lies in ensuring the high-fidelity preservation of product details. Among existing paradigms, <strong>reference-based inpainting</strong> offers a targeted solution by leveraging product reference images to guide the inpainting process. However, limitations remain in three key aspects: the lack of diverse large-scale training data, the struggle of current models to focus on product detail preservation, and the inability of coarse supervision for achieving precise guidance. To address these issues, we propose <strong>HiFi-Inpaint</strong>, a novel high-fidelity reference-based inpainting framework tailored for generating human-product images. <strong>HiFi-Inpaint</strong> introduces <strong>Shared Enhancement Attention (SEA)</strong> to refine fine-grained product features and <strong>Detail-Aware Loss (DAL)</strong> to enforce precise pixel-level supervision using high-frequency maps. Additionally, we construct a new dataset, <strong>HP-Image-40K</strong>, with samples curated from self-synthesis data and processed with automatic filtering. Experimental results show that HiFi-Inpaint achieves state-of-the-art performance, delivering detail-preserving human-product images.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="methodology" class="section">
+    <div class="container">
+      <h2 class="section-title">Methodology</h2>
+      <div class="content-box">
+        <div class="image-container">
+          <img src="static/images/pipeline.jpg" alt="HiFi-Inpaint Overview" class="method-img lightbox-trigger" data-title="Overview of HiFi-Inpaint">
+        </div>
+        <div class="method-grid">
+          <div class="method-card">
+            <h3>HP-Image-40K Dataset</h3>
+            <p>We construct a large-scale dataset of 43,632 high-quality human-product samples via self-synthesis and automatic filtering to enable robust training.</p>
+          </div>
+          <div class="method-card">
+            <h3>Shared Enhancement Attention (SEA)</h3>
+            <p>SEA refines fine-grained product details by injecting high-frequency map tokens into dual-stream DiT blocks with lightweight parameter sharing.</p>
+          </div>
+          <div class="method-card">
+            <h3>Detail-Aware Loss (DAL)</h3>
+            <p>DAL adds high-frequency pixel-level supervision, encouraging accurate reconstruction of subtle textures, patterns, and product text.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="experiments" class="section">
+    <div class="container">
+      <h2 class="section-title">Experiments</h2>
+      <div class="content-box">
+        <h3 class="subsection-title">Quantitative Results</h3>
+        <h4 class="subsection-title subsection-minor">Comparision on Synthetic Data</h4>
+        <div class="table-wrapper">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>CLIP-T</th>
+                <th>CLIP-I</th>
+                <th>DINO</th>
+                <th>SSIM</th>
+                <th>SSIM-HF</th>
+                <th>LAION-Aes</th>
+                <th>Q-Align-IQ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Paint-by-Example</td>
+                <td>31.6</td>
+                <td>69.1</td>
+                <td>63.4</td>
+                <td>54.0</td>
+                <td>34.9</td>
+                <td>4.09</td>
+                <td><u>4.06</u></td>
+              </tr>
+              <tr>
+                <td>ACE++</td>
+                <td>34.9</td>
+                <td>93.1</td>
+                <td><u>90.7</u></td>
+                <td>58.3</td>
+                <td>37.2</td>
+                <td>4.18</td>
+                <td>4.00</td>
+              </tr>
+              <tr>
+                <td>Insert Anything</td>
+                <td>35.3</td>
+                <td><u>94.1</u></td>
+                <td>89.8</td>
+                <td><u>62.1</u></td>
+                <td><u>40.0</u></td>
+                <td>4.20</td>
+                <td>3.89</td>
+              </tr>
+              <tr>
+                <td>FLUX-Kontext</td>
+                <td><strong>36.6</strong></td>
+                <td>82.5</td>
+                <td>63.1</td>
+                <td>51.6</td>
+                <td>32.0</td>
+                <td><strong>4.54</strong></td>
+                <td>3.74</td>
+              </tr>
+              <tr>
+                <td>HiFi-Inpaint (Ours)</td>
+                <td><u>36.1</u></td>
+                <td><strong>95.0</strong></td>
+                <td><strong>91.9</strong></td>
+                <td><strong>63.4</strong></td>
+                <td><strong>42.9</strong></td>
+                <td><u>4.40</u></td>
+                <td><strong>4.36</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-caption">
+          Quantitative comparison on HP-Image-40K test set. HiFi-Inpaint achieves state-of-the-art performance across text alignment, visual consistency, and generation quality metrics.
+        </p>
+        <h4 class="subsection-title subsection-minor">Comparision on Real-World Data</h4>
+        <div class="table-wrapper">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>CLIP-T</th>
+                <th>CLIP-I</th>
+                <th>DINO</th>
+                <th>SSIM</th>
+                <th>SSIM-HF</th>
+                <th>LAION-Aes</th>
+                <th>Q-Align-IQ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Paint-by-Example</td>
+                <td>27.1</td>
+                <td>56.2</td>
+                <td>24.3</td>
+                <td>50.8</td>
+                <td>35.7</td>
+                <td><strong>4.34</strong></td>
+                <td>2.23</td>
+              </tr>
+              <tr>
+                <td>ACE++</td>
+                <td>28.2</td>
+                <td>80.1</td>
+                <td>74.2</td>
+                <td>53.5</td>
+                <td>36.6</td>
+                <td>3.90</td>
+                <td><u>3.47</u></td>
+              </tr>
+              <tr>
+                <td>Insert Anything</td>
+                <td>28.9</td>
+                <td><u>83.1</u></td>
+                <td><u>77.5</u></td>
+                <td><u>55.1</u></td>
+                <td><u>37.8</u></td>
+                <td>3.95</td>
+                <td><strong>3.48</strong></td>
+              </tr>
+              <tr>
+                <td>FLUX-Kontext</td>
+                <td><u>29.0</u></td>
+                <td>59.9</td>
+                <td>55.7</td>
+                <td>44.6</td>
+                <td>34.3</td>
+                <td><u>4.30</u></td>
+                <td>2.91</td>
+              </tr>
+              <tr>
+                <td>HiFi-Inpaint (Ours)</td>
+                <td><strong>29.7</strong></td>
+                <td><strong>86.8</strong></td>
+                <td><strong>79.8</strong></td>
+                <td><strong>60.5</strong></td>
+                <td><strong>44.1</strong></td>
+                <td>4.27</td>
+                <td>3.29</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-caption">
+          Quantitative comparison on real-world data. HiFi-Inpaint remains the strongest overall performer across visual consistency and detail preservation metrics.
+        </p>
+
+        <h4 class="subsection-title subsection-minor">Ablation Study</h4>
+        <div class="table-wrapper">
+          <table class="results-table ablation-table">
+            <thead>
+              <tr>
+                <th rowspan="2">Syn. Data</th>
+                <th rowspan="2">DAL</th>
+                <th rowspan="2">SEA</th>
+                <th colspan="2" class="group-header"><span class="group-title">Text Alignment</span></th>
+                <th colspan="3" class="group-header"><span class="group-title">Visual Consistency</span></th>
+                <th colspan="2" class="group-header"><span class="group-title">Generation Quality</span></th>
+              </tr>
+              <tr>
+                <th>CLIP-T</th>
+                <th>CLIP-I</th>
+                <th>DINO</th>
+                <th>SSIM</th>
+                <th>SSIM-HF</th>
+                <th>LAION-Aes</th>
+                <th>Q-Align-IQ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>35.4</td>
+                <td>91.8</td>
+                <td>85.4</td>
+                <td>57.7</td>
+                <td>38.4</td>
+                <td>4.29</td>
+                <td><u>4.40</u></td>
+              </tr>
+              <tr>
+                <td>✓</td>
+                <td></td>
+                <td></td>
+                <td>35.8</td>
+                <td>94.5</td>
+                <td>89.9</td>
+                <td><u>62.4</u></td>
+                <td>41.2</td>
+                <td>4.32</td>
+                <td>4.23</td>
+              </tr>
+              <tr>
+                <td>✓</td>
+                <td>✓</td>
+                <td></td>
+                <td><strong>36.2</strong></td>
+                <td><u>94.6</u></td>
+                <td><u>90.7</u></td>
+                <td>62.3</td>
+                <td><u>41.8</u></td>
+                <td>4.33</td>
+                <td>4.28</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>✓</td>
+                <td>✓</td>
+                <td>35.9</td>
+                <td>92.2</td>
+                <td>87.6</td>
+                <td>59.8</td>
+                <td>40.3</td>
+                <td><u>4.34</u></td>
+                <td><strong>4.47</strong></td>
+              </tr>
+              <tr>
+                <td>✓</td>
+                <td>✓</td>
+                <td>✓</td>
+                <td><u>36.1</u></td>
+                <td><strong>95.0</strong></td>
+                <td><strong>91.9</strong></td>
+                <td><strong>63.4</strong></td>
+                <td><strong>42.9</strong></td>
+                <td><strong>4.40</strong></td>
+                <td>4.36</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-caption">
+          Quantitative ablation analysis verifies that each component contributes to overall performance: training with synthetic data improves visual consistency, DAL strengthens high-frequency pixel-level supervision, and SEA further enhances detail preservation.
+        </p>
+
+        <h3 class="subsection-title">Qualitative Results</h3>
+        <h4 class="subsection-title subsection-minor">Comparision on Synthetic Data</h4>
+        <div class="image-container qual-container qual-synth-container">
+          <img src="static/images/qual_results.jpg" alt="Qualitative Comparison (Synthetic Data)" class="method-img lightbox-trigger" data-title="Qualitative Comparison (Synthetic Data)">
+        </div>
+        <p class="caption">
+          HiFi-Inpaint preserves fine-grained textures and product details on synthesized human-product images. Click for better view.
+        </p>
+        <h4 class="subsection-title subsection-minor">Comparision on Real-World Data</h4>
+        <div class="image-container qual-container">
+          <img src="static/images/qual_results_real_gray.png" alt="Qualitative Comparison (Real-World Data)" class="method-img lightbox-trigger" data-title="Qualitative Comparison (Real-World Data)">
+        </div>
+        <p class="caption">
+          Compared to prior methods, HiFi-Inpaint generates high-fidelity human-product images with better preservation of fine-grained textures and text details. Click for better view.
+        </p>
+
+        <h4 class="subsection-title subsection-minor">Ablation Study</h4>
+        <div class="image-container">
+          <img src="static/images/abl_results.jpg" alt="Ablation results (Qualitative)" class="method-img lightbox-trigger" data-title="Ablation Study (Qualitative)">
+        </div>
+        <p class="caption">
+          Qualitative ablation results show that removing SEA reduces fine-grained feature enhancement, while removing both SEA and DAL further degrades texture fidelity and product text clarity, highlighting the importance of each design choice.
+        </p>
+        <h4 class="subsection-title subsection-minor">Generalizability Analysis</h4>
+        <div class="image-container general-container">
+          <img src="static/images/hard_cases.jpg" alt="Generalizability Analysis" class="method-img lightbox-trigger" data-title="Generalizability Analysis">
+        </div>
+        <p class="caption">
+          We further evaluate our HiFi-Inpaint on several hard cases, demonstrating its potential to generalize to a broader range of scenarios.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="bibtex" class="section">
+    <div class="container">
+      <h2 class="section-title">BibTeX</h2>
+      <div class="code-block">
+        <div class="code-block-inner">
+          <div class="copy-row">
+            <button class="copy-btn" id="copy-bibtex">Copy</button>
+          </div>
+          <pre id="bibtex-code"><code>@inproceedings{hifi_inpaint_2026,
+  title={HiFi-Inpaint: Towards High-Fidelity Reference-Based Inpainting for Generating Detail-Preserving Human-Product Images},
+  author={Liu, Yichen and Zhou, Donghao and Wang, Jie and Gao, Xin and Liu, Guisheng and Li, Jiatong and Zhang, Quanwei and Lyu, Qiang and Guo, Lanqing and Wen, Shilei and Wang, Weiqiang and Heng, Pheng-Ann},
+  booktitle={CVPR},
+  year={2026},
+  note={Placeholder BibTeX, update with final metadata}
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>
+        This page was built using the <a href="https://yuci-gpt.github.io/TAG-MoE/" target="_blank">TAG-MoE project page</a> which was adopted from the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>. You are free to borrow the source code of this website, we just ask that you link back to <a href="https://correr-zhou.github.io/hifi-inpaint" target="_blank">this page</a> in the footer. This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+      </p>
+    </div>
+  </footer>
+
+  <button id="back-to-top" aria-label="Back to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <div id="lightbox" class="lightbox">
+    <span class="lightbox-close">&times;</span>
+    <button class="lightbox-nav lightbox-prev" aria-label="Previous image">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <button class="lightbox-nav lightbox-next" aria-label="Next image">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    <img class="lightbox-content" id="lightbox-img">
+    <div class="lightbox-title" id="lightbox-title"></div>
+  </div>
+
+  <script src="static/js/index.js"></script>
+</body>
+</html>
