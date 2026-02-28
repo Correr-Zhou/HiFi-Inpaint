@@ -424,6 +424,7 @@ body {
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
   padding: 0.35rem;
+  box-sizing: border-box;
 }
 
 .pdf-embed {
@@ -433,20 +434,23 @@ body {
 }
 
 .teaser-container {
-  aspect-ratio: 2600 / 745;
+  aspect-ratio: auto;
+  padding: 0.45rem;
+  padding-bottom: 0.6rem;
 }
 
 .qual-container {
-  aspect-ratio: 2090 / 1182;
+  aspect-ratio: auto;
 }
 
 .qual-synth-container {
-  aspect-ratio: 2600 / 2348;
+  aspect-ratio: auto;
 }
 
 .general-container {
-  aspect-ratio: 1961 / 500;
+  aspect-ratio: auto;
   padding: 0.5rem;
+  padding-bottom: 1.1rem;
 }
 
 .teaser-img,
