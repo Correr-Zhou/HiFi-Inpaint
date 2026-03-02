@@ -472,6 +472,10 @@ body {
   margin: 0.9rem auto 0;
 }
 
+.clustrmaps-hidden {
+  display: none !important;
+}
+
 .subsection-title {
   font-family: Outfit, sans-serif;
   font-weight: 700;
