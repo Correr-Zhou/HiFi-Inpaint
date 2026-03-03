@@ -24,7 +24,7 @@ Qiang Lyu<sup>1</sup>, Lanqing Guo<sup>5</sup>, Shilei Wen<sup>3,§</sup>, Weiqi
 
 <div align="center">
   <a href="https://correr-zhou.github.io/HiFi-Inpaint/"><img src="https://img.shields.io/static/v1?label=Project%20Page&message=Web&color=green"></a> &ensp;
-  <a href="https://correr-zhou.github.io/HiFi-Inpaint/"><img src="https://img.shields.io/static/v1?label=Paper&message=PDF&color=red"></a> &ensp;
+  <a href="https://arxiv.org/pdf/2603.02210"><img src="https://img.shields.io/static/v1?label=Paper&message=PDF&color=red"></a> &ensp;
   <a href="https://github.com/Correr-Zhou/HiFi-Inpaint"><img src="https://img.shields.io/static/v1?label=Code&message=GitHub&color=blue"></a> &ensp;
   <a href="https://huggingface.co/datasets/donghao-zhou/HP-Image-40K"><img src="https://img.shields.io/static/v1?label=Dataset&message=HP-Image-40K&color=yellow"></a> &ensp;
   <a href="https://github.com/Correr-Zhou/HiFi-Inpaint"><img src="https://img.shields.io/static/v1?label=Model&message=HiFi-Inpaint&color=yellow"></a>
@@ -52,10 +52,10 @@ Human-product images, which showcase the integration of humans and products, pla
 ## 🔗 Citation
 If you find HiFi-Inpaint useful for your research and applications, please cite:
 ```
-@inproceedings{hifi_inpaint_2026,
+@article{liu2026hifiinpaint,
   title={HiFi-Inpaint: Towards High-Fidelity Reference-Based Inpainting for Generating Detail-Preserving Human-Product Images},
   author={Liu, Yichen and Zhou, Donghao and Wang, Jie and Gao, Xin and Liu, Guisheng and Li, Jiatong and Zhang, Quanwei and Lyu, Qiang and Guo, Lanqing and Wen, Shilei and Wang, Weiqiang and Heng, Pheng-Ann},
-  booktitle={CVPR},
+  journal={arXiv preprint arXiv:2603.02210},
   year={2026}
 }
 ```
