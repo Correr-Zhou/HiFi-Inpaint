@@ -1,0 +1,13 @@
+torch>=2.0
+diffusers>=0.32
+transformers
+peft
+accelerate
+lightning
+datasets
+prodigyopt
+opencv-python
+Pillow
+numpy
+wandb
+gradio

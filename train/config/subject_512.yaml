@@ -1,0 +1,41 @@
+dtype: bfloat16
+flux_path: black-forest-labs/FLUX.1-dev
+model:
+  add_cond_attn: false
+  latent_lora: false
+  union_cond_attn: true
+train:
+  accumulate_grad_batches: 1
+  batch_size: 3
+  condition_type: subject
+  dataloader_workers: 4
+  dataset:
+    data_path:
+    - /path/to/your/training_data.json
+    drop_image_prob: 0.1
+    drop_text_prob: 0.1
+    padding: 8
+  fft_loss_config: '2'
+  gradient_checkpointing: true
+  lora_config:
+    init_lora_weights: gaussian
+    lora_alpha: 256
+    r: 256
+    target_modules: (.*x_embedder|.*(?<!single_)transformer_blocks\.[0-9]+\.norm1\.linear|.*(?<!single_)transformer_blocks\.[0-9]+\.attn\.to_k|.*(?<!single_)transformer_blocks\.[0-9]+\.attn\.to_q|.*(?<!single_)transformer_blocks\.[0-9]+\.attn\.to_v|.*(?<!single_)transformer_blocks\.[0-9]+\.attn\.to_out\.0|.*(?<!single_)transformer_blocks\.[0-9]+\.ff\.net\.2|.*single_transformer_blocks\.[0-9]+\.norm\.linear|.*single_transformer_blocks\.[0-9]+\.proj_mlp|.*single_transformer_blocks\.[0-9]+\.proj_out|.*single_transformer_blocks\.[0-9]+\.attn.to_k|.*single_transformer_blocks\.[0-9]+\.attn.to_q|.*single_transformer_blocks\.[0-9]+\.attn.to_v|.*single_transformer_blocks\.[0-9]+\.attn.to_out)
+  max_steps: -1
+  optimizer:
+    params:
+      lr: 1
+      safeguard_warmup: true
+      use_bias_correction: true
+      weight_decay: 0.01
+    type: Prodigy
+  print_every_n_steps: 10
+  random_mask: false
+  sample_interval: 2500
+  save_interval: 2500
+  save_path: runs
+  use_caption: true
+  use_texture_image: true
+  wandb:
+    project: HiFi-Inpaint
