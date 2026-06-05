@@ -100,13 +100,26 @@ Our training data format is compatible with [HP-Image-40K](https://huggingface.c
 }
 ```
 
-Update the `data_path` in `train/config/subject_512.yaml`, then run:
+1. Update the config file `train/config/subject_512.yaml`:
+   - `flux_path`: path to [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev)
+   - `data_path`: path to your training data JSON file(s)
+
+2. Run training:
 
 ```bash
+# Single GPU
 bash train/scripts/train.sh
+
+# Multi-GPU with torchrun
+torchrun --nproc_per_node=8 -m src.train.train
 ```
 
-See `train/` directory for training scripts and configs.
+Training logs are tracked via [Weights & Biases](https://wandb.ai/). Set your API key before training:
+```bash
+export WANDB_API_KEY="your_wandb_api_key"
+```
+
+See `train/config/` for more training configurations.
 
 ## 🤝 Acknowledgements
 
