@@ -64,13 +64,6 @@ conda activate hifi-inpaint
 pip install -r requirements.txt
 ```
 
-If the default PyTorch installation does not match your CUDA version, reinstall PyTorch manually. For example, for CUDA 12.4:
-
-```bash
-pip install --index-url https://download.pytorch.org/whl/cu124 \
-  torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
-```
-
 ## ⚡ Inference
 
 1. Download the base model [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) and our [LoRA weights](https://huggingface.co/datasets/donghao-zhou/HP-Image-40K).
