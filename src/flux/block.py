@@ -103,7 +103,7 @@ def attn_forward(
         cond_query = apply_rotary_emb(cond_query, cond_rotary_emb)
         cond_key = apply_rotary_emb(cond_key, cond_rotary_emb)
     #####modify#####
-    if use_texture_image:  # 新增纹理图像条件判断
+    if use_texture_image:
         cond_texture_query = attn.to_q(condition_latents_texture)
         cond_texture_key = attn.to_k(condition_latents_texture)
         cond_texture_value = attn.to_v(condition_latents_texture)

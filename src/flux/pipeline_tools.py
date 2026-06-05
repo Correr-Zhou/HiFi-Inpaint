@@ -34,40 +34,25 @@ import torch.nn.functional as F
 
 def encode_mask(pipeline: FluxPipeline, mask: torch.Tensor):
     """
-    将0-1 mask图像 (B,1,H,W) 变换为与latent对齐的token与id，用于条件控制。
-    
-    Args:
-        pipeline (FluxPipeline): pipeline对象
-        mask (Tensor): shape [B, 1, H, W]，值域0-1的float型mask图像
-
-    Returns:
-        mask_tokens: [B, N, D] 的token序列
-        mask_ids: [N] 或 [B, N] 的image token ID
+    Convert a [0,1] mask image (B,1,H,W) into latent-aligned tokens and IDs for conditioning.
     """
-    # 获取 latent 大小，假设压缩8倍（如 VAE 输出 [B, 16, H//8, W//8]）
     B, _, H, W = mask.shape
     H_latent, W_latent = H // 8, W // 8
 
-    # Step 1: Resize mask 为 latent 分辨率，插值 + 二值化
     mask = F.interpolate(mask, size=(H_latent, W_latent), mode="bilinear", align_corners=False)
-    mask = (mask > 0.5).float()  # 保证是二值mask
+    mask = (mask > 0.5).float()
 
-    # Step 2: 转换为与 latent 对齐的通道数（通常为16通道）
     C_latent = 16
-    mask = mask.repeat(1, C_latent, 1, 1)  # shape: [B, 16, H', W']
+    mask = mask.repeat(1, C_latent, 1, 1)
 
-    # Step 3: 放到模型设备/数据类型
     mask = mask.to(pipeline.device).to(pipeline.dtype)
 
-    # Step 4: 打包 token
     mask_tokens = pipeline._pack_latents(mask, *mask.shape)
 
-    # Step 5: 构建 mask 对应的 image IDs（与latent位置对齐）
     mask_ids = pipeline._prepare_latent_image_ids(
         B, H_latent, W_latent, pipeline.device, pipeline.dtype
     )
 
-    # Step 6: 如果 token 数不一致（可能 pack 时变成 patch），fallback 为 H/2, W/2
     if mask_tokens.shape[1] != mask_ids.shape[0]:
         mask_ids = pipeline._prepare_latent_image_ids(
             B, H_latent // 2, W_latent // 2, pipeline.device, pipeline.dtype
@@ -107,18 +92,14 @@ def prepare_mask_input(pipeline: FluxPipeline, images, mask_images):
     num_images_per_prompt = 1
     generator = None
 
-    # 预处理图像和蒙版图像
     image = pipeline.image_processor.preprocess(images)
     mask_image = pipeline.mask_processor.preprocess(mask_images)
 
-    # 应用蒙版到图像
     masked_image = image * (1 - mask_image)
     masked_image = masked_image.to(device=device, dtype=dtype)
 
-    # 获取图像的高度和宽度
     height, width = image.shape[-2:]
 
-    # 准备蒙版和蒙版图像的潜在变量
     mask, masked_image_latents = pipeline.prepare_mask_latents(
         mask_image,
         masked_image,
@@ -132,7 +113,6 @@ def prepare_mask_input(pipeline: FluxPipeline, images, mask_images):
         generator,
     )
 
-    # 将蒙版和蒙版图像的潜在变量沿最后一个维度连接
     masked_image_latents = torch.cat((masked_image_latents, mask), dim=-1)
     return masked_image_latents
 
