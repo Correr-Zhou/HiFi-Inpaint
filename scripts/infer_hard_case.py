@@ -1,29 +1,40 @@
 """
-HiFi-Inpaint inference on hard_case test images.
-
-Usage:
-    python scripts/infer_hard_case.py \
-        --flux_path /path/to/FLUX.1-dev \
-        --lora_path /path/to/ckpt/10000 \
-        --ref_image hard_case/input/hard_case_1_ref.jpg \
-        --mask_image hard_case/input/hard_case_1_mask.png \
-        --output_dir ./output \
-        --prompt "A glass bottle labeled Hifi-Inpaint placed on the grass field"
+HiFi-Inpaint inference - based on eval_ominicontrol_gen_dataset.py
 """
-
-import os
-import sys
-import argparse
+import io, os, sys
 import cv2
-import numpy as np
 import torch
 import torch.nn as nn
-from PIL import Image
+import json
+import numpy as np
+from PIL import Image, ImageOps
+from diffusers.utils import load_image
 from diffusers.pipelines import FluxPipeline
+import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from src.flux.condition import Condition
-from src.flux.generate import generate
+from src.flux.generate import generate, seed_everything
+from src.flux.pipeline_tools import encode_mask
+
+
+def extract_mask(image_path):
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    _, binary = cv2.threshold(image, 10, 255, cv2.THRESH_BINARY_INV)
+    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    max_area = 0
+    max_rect = None
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        area = w * h
+        if area > max_area:
+            max_area = area
+            max_rect = (x, y, w, h)
+    mask = np.zeros_like(image)
+    if max_rect:
+        x, y, w, h = max_rect
+        mask[y:y+h, x:x+w] = 255
+    return Image.fromarray(mask)
 
 
 def apply_high_pass_filter(image: Image.Image) -> Image.Image:
@@ -34,8 +45,9 @@ def apply_high_pass_filter(image: Image.Image) -> Image.Image:
     crow, ccol = rows // 2, cols // 2
     r = 30
     mask = np.ones((rows, cols, 2), np.uint8)
+    center = [crow, ccol]
     x, y = np.ogrid[:rows, :cols]
-    mask_area = (x - crow)**2 + (y - ccol)**2 <= r**2
+    mask_area = (x - center[0])**2 + (y - center[1])**2 <= r**2
     mask[mask_area] = 0
     fshift = dft_shift * mask
     f_ishift = np.fft.ifftshift(fshift)
@@ -47,111 +59,134 @@ def apply_high_pass_filter(image: Image.Image) -> Image.Image:
     return Image.fromarray(np.uint8(img_back))
 
 
-def extract_mask(image: Image.Image) -> Image.Image:
-    gray = np.array(image.convert('L'))
-    _, binary = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY_INV)
-    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    max_area, max_rect = 0, None
-    for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        if w * h > max_area:
-            max_area = w * h
-            max_rect = (x, y, w, h)
-    mask = np.zeros_like(gray)
-    if max_rect:
-        x, y, w, h = max_rect
-        mask[y:y+h, x:x+w] = 255
-    return Image.fromarray(mask)
+class ImageProcessor:
+    def __init__(self, config):
+        self.config = config
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.pipe = self._setup_pipeline()
+        self.generator = torch.Generator(device=self.device).manual_seed(config['seed'])
 
+    def _setup_pipeline(self):
+        print("Setting up the pipeline...")
+        pipe = FluxPipeline.from_pretrained(
+            self.config['base_model_path'], torch_dtype=torch.bfloat16
+        )
+        pipe.to(self.device)
 
-def load_pipeline(flux_path, lora_path, device="cuda"):
-    print(f"Loading FLUX from {flux_path}...")
-    pipe = FluxPipeline.from_pretrained(flux_path, torch_dtype=torch.bfloat16)
-    pipe.to(device)
+        print(f"Loading LoRA weights from: {self.config['lora_path']}")
+        pipe.load_lora_weights(
+            self.config['lora_path'],
+            weight_name="pytorch_lora_weights.safetensors",
+            adapter_name="subject",
+        )
+        self._load_alpha_weights(pipe.transformer, self.config['lora_path'])
+        print("Pipeline setup complete.")
+        return pipe
 
-    print(f"Loading LoRA from {lora_path}...")
-    pipe.load_lora_weights(
-        lora_path,
-        weight_name="pytorch_lora_weights.safetensors",
-        adapter_name="subject",
-    )
-
-    alpha_path = os.path.join(lora_path, "alpha_blocks.pt")
-    if os.path.exists(alpha_path):
+    def _load_alpha_weights(self, transformer, lora_path):
+        alpha_path = os.path.join(lora_path, "alpha_blocks.pt")
+        if not os.path.exists(alpha_path):
+            print(f"Warning: Alpha weights not found at {alpha_path}. Skipping.")
+            return
         print(f"Loading alpha weights from {alpha_path}...")
-        alpha_dict = torch.load(alpha_path, map_location=device)
-        for i, block in enumerate(pipe.transformer.transformer_blocks):
-            if f"alpha_block_{i}" in alpha_dict:
-                setattr(block, 'alpha', nn.Parameter(alpha_dict[f"alpha_block_{i}"].clone().detach()))
-    return pipe
+        alpha_dict = torch.load(alpha_path, map_location=self.device)
+        for i, block in enumerate(transformer.transformer_blocks):
+            alpha_value = alpha_dict[f"alpha_block_{i}"]
+            setattr(block, 'alpha', nn.Parameter(alpha_value.clone().detach()))
 
+    def process_single(self, ref_image_path, masked_img_path, mask_bw_path=None, prompt=" ", save_path="output.png"):
+        control_image = load_image(ref_image_path).convert("RGB")
 
-def run_inference(pipe, ref_image, mask_image, prompt, mask_bw_image=None, seed=42):
-    device = pipe.device
-    generator = torch.Generator(device=device).manual_seed(seed)
+        if mask_bw_path:
+            mask = load_image(mask_bw_path).convert("L")
+            mask = Image.fromarray(np.array(mask))
+        else:
+            mask = extract_mask(masked_img_path)
 
-    ref_img = ref_image.convert("RGB")
-    masked_img = mask_image.convert("RGB")
-    mask_bw = mask_bw_image if mask_bw_image else extract_mask(mask_image)
-    texture = apply_high_pass_filter(ref_img).convert("RGB")
+        masked_img = load_image(masked_img_path).convert("RGB")
+        control_image_padded = control_image
 
-    height = np.array(ref_img).shape[0]
-    position_delta = [0, -height // 16]
+        target_size = (768, 768)
+        position_delta = [0, -target_size[1] // 16]
 
-    ref_condition = Condition("subject", ref_img, position_delta=position_delta)
-    masked_condition = Condition("subject", masked_img, position_delta=None)
-    texture_condition = Condition("subject", texture, position_delta=None)
+        ref_image_condition = Condition(
+            condition_type="subject",
+            condition=control_image_padded,
+            position_delta=position_delta,
+        )
+        masked_image_condition = Condition(
+            condition_type="subject",
+            condition=masked_img,
+            position_delta=None,
+        )
+        conditions = [ref_image_condition, masked_image_condition]
 
-    conditions = [ref_condition, masked_condition]
-    conditions_texture = [texture_condition, masked_condition]
+        if self.config['use_texture_image']:
+            texture_image = apply_high_pass_filter(control_image).convert('RGB')
+            texture_img_condition = Condition(
+                condition_type="subject",
+                condition=texture_image,
+                position_delta=None,
+            )
+            conditions_texture = [texture_img_condition, masked_image_condition]
+            mask_np = np.array(mask.convert("L")).astype(np.float32) / 255.0
+            mask_tensor = torch.from_numpy(mask_np).unsqueeze(0).unsqueeze(0)
+            mask_tokens, _ = encode_mask(self.pipe, mask_tensor)
+            conditions_texture_mask = mask_tokens
+        else:
+            conditions_texture = None
+            conditions_texture_mask = None
 
-    result = generate(
-        pipe,
-        prompt=prompt,
-        conditions=conditions,
-        conditions_texture=conditions_texture,
-        conditions_texture_mask=mask_bw,
-        image=ref_img,
-        mask_image=masked_img,
-        height=masked_img.height,
-        width=masked_img.width,
-        generator=generator,
-        use_texture_image=True,
-        default_lora=True,
-    )
-    return result.images[0]
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
 
+        res_image = generate(
+            self.pipe,
+            prompt=prompt,
+            conditions=conditions,
+            conditions_texture=conditions_texture if self.config['use_texture_image'] else None,
+            conditions_texture_mask=conditions_texture_mask if self.config['use_texture_image'] else None,
+            image=control_image_padded,
+            mask_image=masked_img,
+            height=masked_img.height,
+            width=masked_img.width,
+            generator=self.generator,
+            use_texture_image=self.config['use_texture_image'],
+            default_lora=True,
+        ).images[0]
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="HiFi-Inpaint Hard Case Inference")
-    parser.add_argument("--flux_path", type=str, required=True)
-    parser.add_argument("--lora_path", type=str, required=True)
-    parser.add_argument("--ref_image", type=str, required=True)
-    parser.add_argument("--mask_image", type=str, required=True)
-    parser.add_argument("--mask_bw", type=str, default=None, help="B/W mask image (auto-extracted from mask_image if not provided)")
-    parser.add_argument("--prompt", type=str, default="A glass bottle placed on the grass field")
-    parser.add_argument("--output_dir", type=str, default="./output")
-    parser.add_argument("--seed", type=int, default=42)
-    return parser.parse_args()
+        res_image.save(save_path)
+        print(f"Result saved to {save_path}")
 
 
 def main():
-    args = parse_args()
-    os.makedirs(args.output_dir, exist_ok=True)
+    parser = argparse.ArgumentParser(description="HiFi-Inpaint Inference")
+    parser.add_argument("--base_model_path", type=str, required=True)
+    parser.add_argument("--lora_path", type=str, required=True)
+    parser.add_argument("--ref_image", type=str, required=True)
+    parser.add_argument("--mask_image", type=str, required=True)
+    parser.add_argument("--mask_bw", type=str, default=None)
+    parser.add_argument("--prompt", type=str, default=" ")
+    parser.add_argument("--output", type=str, default="./output/result.png")
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--use_texture_image", action="store_true", default=True)
+    args = parser.parse_args()
 
-    pipe = load_pipeline(args.flux_path, args.lora_path)
+    config = {
+        'base_model_path': args.base_model_path,
+        'lora_path': args.lora_path,
+        'seed': args.seed,
+        'use_caption': True,
+        'use_texture_image': args.use_texture_image,
+    }
 
-    ref_image = Image.open(args.ref_image)
-    mask_image = Image.open(args.mask_image)
-    mask_bw_image = Image.open(args.mask_bw) if args.mask_bw else None
-
-    print(f"Running inference: ref={args.ref_image}, mask={args.mask_image}")
-    result = run_inference(pipe, ref_image, mask_image, args.prompt, mask_bw_image, args.seed)
-
-    out_name = os.path.splitext(os.path.basename(args.mask_image))[0] + "_result.png"
-    out_path = os.path.join(args.output_dir, out_name)
-    result.save(out_path)
-    print(f"Result saved to {out_path}")
+    processor = ImageProcessor(config)
+    processor.process_single(
+        ref_image_path=args.ref_image,
+        masked_img_path=args.mask_image,
+        mask_bw_path=args.mask_bw,
+        prompt=args.prompt,
+        save_path=args.output,
+    )
 
 
 if __name__ == "__main__":

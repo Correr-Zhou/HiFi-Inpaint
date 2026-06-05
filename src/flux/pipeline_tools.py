@@ -1,7 +1,7 @@
 from diffusers.pipelines import FluxPipeline
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.utils import logging
-from diffusers.pipelines.flux.pipeline_flux import logger
+logger = logging.get_logger(__name__)
 from torch import Tensor
 import torch
 

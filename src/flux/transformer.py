@@ -6,12 +6,21 @@ from .lora_controller import enable_lora
 from diffusers.models.transformers.transformer_flux import (
     FluxTransformer2DModel,
     Transformer2DModelOutput,
-    USE_PEFT_BACKEND,
-    is_torch_version,
-    scale_lora_layers,
-    unscale_lora_layers,
-    logger,
 )
+try:
+    from diffusers.models.transformers.transformer_flux import (
+        USE_PEFT_BACKEND, is_torch_version, scale_lora_layers, unscale_lora_layers, logger,
+    )
+except ImportError:
+    from diffusers.utils import is_torch_version, logging
+    logger = logging.get_logger(__name__)
+    try:
+        from peft.utils import scale_lora_layers, unscale_lora_layers
+        USE_PEFT_BACKEND = True
+    except ImportError:
+        USE_PEFT_BACKEND = False
+        scale_lora_layers = lambda *a, **kw: None
+        unscale_lora_layers = lambda *a, **kw: None
 import numpy as np
 
 

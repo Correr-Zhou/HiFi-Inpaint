@@ -5,12 +5,17 @@ from typing import List, Union, Optional, Dict, Any, Callable
 from .transformer import tranformer_forward
 from .condition import Condition
 
-from diffusers.pipelines.flux.pipeline_flux import (
-    FluxPipelineOutput,
-    calculate_shift,
-    retrieve_timesteps,
-    np,
-)
+import numpy as np
+from diffusers.pipelines.flux.pipeline_flux import FluxPipelineOutput
+try:
+    from diffusers.pipelines.flux.pipeline_flux import calculate_shift, retrieve_timesteps
+except ImportError:
+    from diffusers.schedulers.scheduling_flow_match_euler_discrete import retrieve_timesteps
+    def calculate_shift(image_seq_len, base_seq_len=256, max_seq_len=4096, base_shift=0.5, max_shift=1.16):
+        m = (max_shift - base_shift) / (max_seq_len - base_seq_len)
+        b = base_shift - m * base_seq_len
+        mu = image_seq_len * m + b
+        return mu
 
 
 def get_config(config_path: str = None):
