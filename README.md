@@ -27,7 +27,7 @@ Qiang Lyu<sup>1</sup>, Lanqing Guo<sup>5</sup>, Shilei Wen<sup>3,§</sup>, Weiqi
   <a href="https://arxiv.org/pdf/2603.02210"><img src="https://img.shields.io/static/v1?label=Paper&message=PDF&color=red"></a> &ensp;
   <a href="https://github.com/Correr-Zhou/HiFi-Inpaint"><img src="https://img.shields.io/static/v1?label=Code&message=GitHub&color=blue"></a> &ensp;
   <a href="https://huggingface.co/datasets/donghao-zhou/HP-Image-40K"><img src="https://img.shields.io/static/v1?label=Dataset&message=HP-Image-40K&color=yellow"></a> &ensp;
-  <a href="https://www.modelscope.cn/asdfasgad/hifi_inpaint_released.git"><img src="https://img.shields.io/static/v1?label=Model&message=HiFi-Inpaint&color=yellow"></a>
+  <a href="https://huggingface.co/datasets/donghao-zhou/HP-Image-40K"><img src="https://img.shields.io/static/v1?label=Model&message=HiFi-Inpaint&color=yellow"></a>
 </div>
 
 ---
@@ -65,7 +65,7 @@ pip install -r requirements.txt
 
 ## ⚡ Inference
 
-1. Download the base model [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) and our [LoRA weights](https://www.modelscope.cn/asdfasgad/hifi_inpaint_released.git).
+1. Download the base model [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) and our [LoRA weights](https://huggingface.co/datasets/donghao-zhou/HP-Image-40K).
 
 2. Update the paths in `run_inference.sh`:
    - `FLUX_PATH`: path to FLUX.1-dev
