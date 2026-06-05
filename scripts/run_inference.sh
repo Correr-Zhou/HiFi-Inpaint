@@ -1,36 +1,38 @@
 #!/bin/bash
 set -e
 
-# ========== 路径配置 ==========
-FLUX_PATH="/primus_xpfs_workspace_T04/liuyichen/HiFi-Inpaint-raw/ckpts/FLUX.1-dev/AI-ModelScope/FLUX.1-dev"
-LORA_PATH="/primus_xpfs_workspace_T04/liuyichen/HiFi-Inpaint-raw/ckpts/20250727-082134gen+real_data_caption+loss+texture/ckpt/10000"
-HARD_CASE_DIR="/primus_xpfs_workspace_T04/liuyichen/HiFi-Inpaint-raw/code-training/ominicontrol-lyc/hard_case/input"
-REAL_HARD_CASE_DIR="/primus_xpfs_workspace_T04/liuyichen/HiFi-Inpaint-raw/code-training/ominicontrol-lyc/real_hard_case/input"
+# ========== Path Configuration ==========
+FLUX_PATH="black-forest-labs/FLUX.1-dev"
+LORA_PATH="<path-to-lora-weights>"
+DEMO_DIR="./assets/demo"
 OUTPUT_DIR="./output"
 
 cd "$(dirname "$0")/.."
 
-# ========== Case 1: hard_case_1 (草地+玻璃瓶) ==========
-echo "===== Running hard_case_1 ====="
+# ========== Case 1: Black jar + person holding ==========
+echo "===== Running Case 1: person holding black jar ====="
 python scripts/infer_hard_case.py \
     --base_model_path "${FLUX_PATH}" \
     --lora_path "${LORA_PATH}" \
-    --ref_image "${HARD_CASE_DIR}/hard_case_1_ref.jpg" \
-    --mask_image "${HARD_CASE_DIR}/hard_case_1_mask.png" \
-    --prompt "A glass bottle labeled Hifi-Inpaint placed on the grass field" \
-    --output "${OUTPUT_DIR}/hard_case_1_result.png" \
+    --ref_image "${DEMO_DIR}/case1_ref.jpg" \
+    --mask_image "${DEMO_DIR}/case1_condition.png" \
+    --mask_bw "${DEMO_DIR}/case1_mask.png" \
+    --prompt "A person wearing a white top holding a matte black jar labeled \"Hifi-Inpaint perfect restoration, every time\" with a golden lotus logo. The background is a neutral color with minimalist style." \
+    --output "${OUTPUT_DIR}/case1_result.png" \
+    --target_size 576 1024 \
     --seed 42
 
-# ========== Case 2: real_hard_case_1 (人物手持产品) ==========
-echo "===== Running real_hard_case_1 ====="
+# ========== Case 2: Glass bottle + close-up ==========
+echo "===== Running Case 2: close-up person holding glass bottle ====="
 python scripts/infer_hard_case.py \
     --base_model_path "${FLUX_PATH}" \
     --lora_path "${LORA_PATH}" \
-    --ref_image "${REAL_HARD_CASE_DIR}/real_hard_case_1.png" \
-    --mask_image "${REAL_HARD_CASE_DIR}/real_hard_case_1_masked_img.png" \
-    --mask_bw "${REAL_HARD_CASE_DIR}/real_hard_case_1_mask.png" \
-    --prompt "A person holding a small bottle" \
-    --output "${OUTPUT_DIR}/real_hard_case_1_result.png" \
+    --ref_image "${DEMO_DIR}/case2_ref.jpg" \
+    --mask_image "${DEMO_DIR}/case2_condition.png" \
+    --mask_bw "${DEMO_DIR}/case2_mask.png" \
+    --prompt "A close-up of a person holding a clear glass bottle with a wooden cap labeled \"Hifi-Inpaint artistry meets precision\" with circular pattern decorations. The person has neatly manicured nails, focusing on the bottle." \
+    --output "${OUTPUT_DIR}/case2_result.png" \
+    --target_size 576 1024 \
     --seed 42
 
 echo "===== Done! Results saved to ${OUTPUT_DIR} ====="

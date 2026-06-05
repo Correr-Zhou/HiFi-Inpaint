@@ -15,7 +15,6 @@ import argparse
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from src.flux.condition import Condition
 from src.flux.generate import generate, seed_everything
-from src.flux.pipeline_tools import encode_mask
 
 
 def extract_mask(image_path):
@@ -94,24 +93,34 @@ class ImageProcessor:
             alpha_value = alpha_dict[f"alpha_block_{i}"]
             setattr(block, 'alpha', nn.Parameter(alpha_value.clone().detach()))
 
-    def process_single(self, ref_image_path, masked_img_path, mask_bw_path=None, prompt=" ", save_path="output.png"):
+    def _align_size(self, w, h, divisor=16):
+        return (w // divisor * divisor, h // divisor * divisor)
+
+    def process_single(self, ref_image_path, masked_img_path, mask_bw_path=None, prompt=" ", save_path="output.png", target_size=None, ref_size=None):
         control_image = load_image(ref_image_path).convert("RGB")
+        masked_img = load_image(masked_img_path).convert("RGB")
+
+        if ref_size:
+            control_image = control_image.resize(ref_size)
+
+        if target_size:
+            masked_img = masked_img.resize(target_size)
+            aligned_w, aligned_h = target_size
+        else:
+            aligned_w, aligned_h = self._align_size(masked_img.width, masked_img.height)
+            if (aligned_w, aligned_h) != masked_img.size:
+                masked_img = masked_img.resize((aligned_w, aligned_h))
 
         if mask_bw_path:
-            mask = load_image(mask_bw_path).convert("L")
-            mask = Image.fromarray(np.array(mask))
+            mask = load_image(mask_bw_path).convert("L").resize((aligned_w, aligned_h))
         else:
-            mask = extract_mask(masked_img_path)
+            mask = extract_mask(masked_img_path).resize((aligned_w, aligned_h))
 
-        masked_img = load_image(masked_img_path).convert("RGB")
-        control_image_padded = control_image
-
-        target_size = (768, 768)
-        position_delta = [0, -target_size[1] // 16]
+        position_delta = [0, -aligned_h // 16]
 
         ref_image_condition = Condition(
             condition_type="subject",
-            condition=control_image_padded,
+            condition=control_image,
             position_delta=position_delta,
         )
         masked_image_condition = Condition(
@@ -129,10 +138,7 @@ class ImageProcessor:
                 position_delta=None,
             )
             conditions_texture = [texture_img_condition, masked_image_condition]
-            mask_np = np.array(mask.convert("L")).astype(np.float32) / 255.0
-            mask_tensor = torch.from_numpy(mask_np).unsqueeze(0).unsqueeze(0)
-            mask_tokens, _ = encode_mask(self.pipe, mask_tensor)
-            conditions_texture_mask = mask_tokens
+            conditions_texture_mask = mask
         else:
             conditions_texture = None
             conditions_texture_mask = None
@@ -145,10 +151,10 @@ class ImageProcessor:
             conditions=conditions,
             conditions_texture=conditions_texture if self.config['use_texture_image'] else None,
             conditions_texture_mask=conditions_texture_mask if self.config['use_texture_image'] else None,
-            image=control_image_padded,
+            image=control_image,
             mask_image=masked_img,
-            height=masked_img.height,
-            width=masked_img.width,
+            height=aligned_h,
+            width=aligned_w,
             generator=self.generator,
             use_texture_image=self.config['use_texture_image'],
             default_lora=True,
@@ -169,6 +175,10 @@ def main():
     parser.add_argument("--output", type=str, default="./output/result.png")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--use_texture_image", action="store_true", default=True)
+    parser.add_argument("--target_size", type=int, nargs=2, default=None,
+                        metavar=("W", "H"), help="Resize masked_img to WxH (e.g. 576 1024)")
+    parser.add_argument("--ref_size", type=int, nargs=2, default=None,
+                        metavar=("W", "H"), help="Resize ref image to WxH (e.g. 768 768)")
     args = parser.parse_args()
 
     config = {
@@ -186,6 +196,8 @@ def main():
         mask_bw_path=args.mask_bw,
         prompt=args.prompt,
         save_path=args.output,
+        target_size=tuple(args.target_size) if args.target_size else None,
+        ref_size=tuple(args.ref_size) if args.ref_size else None,
     )
 
 

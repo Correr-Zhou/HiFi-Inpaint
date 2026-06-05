@@ -1,29 +1,47 @@
----
-base_model:
-- ""
-frameworks:
-- ""
-license: Apache License 2.0
-tags: []
----
-### 当前模型的贡献者未提供更加详细的模型介绍。模型文件和权重，可浏览“模型文件”页面获取。
-#### 您可以通过如下git clone命令，或者ModelScope SDK来下载模型
+# HiFi-Inpaint
 
-SDK下载
+<p align="center">
+  <img src="assets/teaser.jpg" width="100%">
+</p>
+
+Official implementation of **HiFi-Inpaint** (CVPR 2026).
+
+## Demo Results
+
+| Reference | Condition (Masked) | Result |
+|:---------:|:-----------------:|:------:|
+| <img src="assets/demo/case1_ref.jpg" width="200"> | <img src="assets/demo/case1_condition.png" width="200"> | <img src="assets/demo/case1_result.png" width="200"> |
+| <img src="assets/demo/case2_ref.jpg" width="200"> | <img src="assets/demo/case2_condition.png" width="200"> | <img src="assets/demo/case2_result.png" width="200"> |
+
+## Installation
+
 ```bash
-#安装ModelScope
-pip install modelscope
-```
-```python
-#SDK模型下载
-from modelscope import snapshot_download
-model_dir = snapshot_download('asdfasgad/hifi_inpaint_released')
-```
-Git下载
-```
-#Git模型下载
-git clone https://www.modelscope.cn/asdfasgad/hifi_inpaint_released.git
+pip install -r requirements.txt
 ```
 
-<p style="color: lightgrey;">如果您是本模型的贡献者，我们邀请您根据<a href="https://modelscope.cn/docs/ModelScope%E6%A8%A1%E5%9E%8B%E6%8E%A5%E5%85%A5%E6%B5%81%E7%A8%8B%E6%A6%82%E8%A7%88" style="color: lightgrey; text-decoration: underline;">模型贡献文档</a>，及时完善模型卡片内容。</p>
+## Inference
 
+1. Download the base model [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) and our [LoRA weights](https://www.modelscope.cn/asdfasgad/hifi_inpaint_released.git).
+
+2. Update the paths in `scripts/run_inference.sh`:
+   - `FLUX_PATH`: path to FLUX.1-dev
+   - `LORA_PATH`: path to LoRA checkpoint
+
+3. Run inference:
+```bash
+bash scripts/run_inference.sh
+```
+
+Results will be saved to `./output/`.
+
+## Training
+
+See `train/` directory for training scripts and configs.
+
+```bash
+bash train/scripts/train.sh
+```
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.

@@ -102,7 +102,6 @@ def attn_forward(
     if cond_rotary_emb is not None:
         cond_query = apply_rotary_emb(cond_query, cond_rotary_emb)
         cond_key = apply_rotary_emb(cond_key, cond_rotary_emb)
-    # import pdb;pdb.set_trace()
     #####modify#####
     if use_texture_image:  # 新增纹理图像条件判断
         cond_texture_query = attn.to_q(condition_latents_texture)
@@ -144,7 +143,6 @@ def attn_forward(
         condition_n = cond_query.shape[2]
         attention_mask[-condition_n:, :-condition_n] = False
         attention_mask[:-condition_n, -condition_n:] = False
-    
     if hasattr(attn, "c_factor"):
         attention_mask = torch.zeros(
             query.shape[2], key.shape[2], device=query.device, dtype=query.dtype
@@ -153,11 +151,9 @@ def attn_forward(
         bias = torch.log(attn.c_factor[0])
         attention_mask[-condition_n:, :-condition_n] = bias
         attention_mask[:-condition_n, -condition_n:] = bias
-    
     hidden_states = F.scaled_dot_product_attention(
         query, key, value, dropout_p=0.0, is_causal=False, attn_mask=attention_mask
     )
-
     hidden_states = hidden_states.transpose(1, 2).reshape(
         batch_size, -1, attn.heads * head_dim
     )
@@ -174,11 +170,6 @@ def attn_forward(
             )
             #####modify#####
             if use_texture_image:
-                # import pdb;pdb.set_trace()
-                # 动态确定 slice 的起止位置
-                # start = encoder_hidden_states_query_proj.size(2)
-                # end = query.size(2)  # 拼接之后的总 token 数
-
                 hidden_states_texture = hidden_states_texture.transpose(1, 2).reshape(
                     batch_size, -1, attn.heads * head_dim
                 )
@@ -190,13 +181,9 @@ def attn_forward(
                 ],
                 hidden_states_texture[:, -condition_latents.shape[1] :],
                 )
-                # import pdb;pdb.set_trace()
-                mask = condition_latents_texture_mask.mean(dim=-1, keepdim=True)  # → [B, 2304, 1]
-                # mask = mask.unsqueeze(1)  # → [B, 1, 2304, 1]
+                mask = condition_latents_texture_mask.mean(dim=-1, keepdim=True)
                 hidden_states_texture *= mask
-                # print('mask.shape:',mask.shape)
-                # print('hidden_states_texture.shape:',hidden_states_texture.shape)
-                hidden_states =  hidden_states + alpha * hidden_states_texture 
+                hidden_states = hidden_states + alpha * hidden_states_texture
         else:
             encoder_hidden_states, hidden_states = (
                 hidden_states[:, : encoder_hidden_states.shape[1]],
