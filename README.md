@@ -50,17 +50,25 @@ Human-product images, which showcase the integration of humans and products, pla
 <p><small>We propose <b>HiFi-Inpaint</b>, a DiT-based framework that can seamlessly integrate product reference images into masked human images, generating high-quality human-product images with high-fidelity detail preservation.</small></p>
 </div>
 
-## 🎬 Demo Results
+## 🛠️ Environment Setup
 
-| Reference | Condition (Masked) | Result |
-|:---------:|:-----------------:|:------:|
-| <img src="assets/demo/case1_ref.jpg" width="200"> | <img src="assets/demo/case1_condition.png" width="200"> | <img src="assets/demo/case1_result.png" width="200"> |
-| <img src="assets/demo/case2_ref.jpg" width="200"> | <img src="assets/demo/case2_condition.png" width="200"> | <img src="assets/demo/case2_result.png" width="200"> |
-
-## 🛠️ Installation
+We recommend using a clean Conda environment with Python 3.11:
 
 ```bash
+git clone https://github.com/Correr-Zhou/HiFi-Inpaint.git
+cd HiFi-Inpaint
+
+conda create -n hifi-inpaint python=3.11 -y
+conda activate hifi-inpaint
+
 pip install -r requirements.txt
+```
+
+If the default PyTorch installation does not match your CUDA version, reinstall PyTorch manually. For example, for CUDA 12.4:
+
+```bash
+pip install --index-url https://download.pytorch.org/whl/cu124 \
+  torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
 ```
 
 ## ⚡ Inference
