@@ -4,7 +4,7 @@
 # Usage: bash train/scripts/train.sh
 
 # Set config path
-export XFL_CONFIG="train/config/subject_512.yaml"
+export XFL_CONFIG="train/config/hifi_inpaint.yaml"
 
 # Optional: set run name
 export RUN_NAME="hifi_inpaint"

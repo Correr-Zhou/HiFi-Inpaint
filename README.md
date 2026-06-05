@@ -100,7 +100,7 @@ Our training data format is compatible with [HP-Image-40K](https://huggingface.c
 }
 ```
 
-1. Update the config file `train/config/subject_512.yaml`:
+1. Update the config file `train/config/hifi_inpaint.yaml`:
    - `flux_path`: path to [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev)
    - `data_path`: path to your training data JSON file(s)
 
