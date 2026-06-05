@@ -23,13 +23,13 @@ pip install -r requirements.txt
 
 1. Download the base model [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) and our [LoRA weights](https://www.modelscope.cn/asdfasgad/hifi_inpaint_released.git).
 
-2. Update the paths in `scripts/run_inference.sh`:
+2. Update the paths in `run_inference.sh`:
    - `FLUX_PATH`: path to FLUX.1-dev
    - `LORA_PATH`: path to LoRA checkpoint
 
 3. Run inference:
 ```bash
-bash scripts/run_inference.sh
+bash run_inference.sh
 ```
 
 Results will be saved to `./output/`.

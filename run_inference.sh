@@ -7,11 +7,11 @@ LORA_PATH="<path-to-lora-weights>"
 DEMO_DIR="./assets/demo"
 OUTPUT_DIR="./output"
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")"
 
 # ========== Case 1: Black jar + person holding ==========
 echo "===== Running Case 1: person holding black jar ====="
-python scripts/infer_hard_case.py \
+python inference.py \
     --base_model_path "${FLUX_PATH}" \
     --lora_path "${LORA_PATH}" \
     --ref_image "${DEMO_DIR}/case1_ref.jpg" \
@@ -24,7 +24,7 @@ python scripts/infer_hard_case.py \
 
 # ========== Case 2: Glass bottle + close-up ==========
 echo "===== Running Case 2: close-up person holding glass bottle ====="
-python scripts/infer_hard_case.py \
+python inference.py \
     --base_model_path "${FLUX_PATH}" \
     --lora_path "${LORA_PATH}" \
     --ref_image "${DEMO_DIR}/case2_ref.jpg" \
