@@ -10,6 +10,9 @@ train:
   condition_type: subject
   dataloader_workers: 4
   dataset:
+    # JSON format: [{"ref_image_path": "...", "gt_image_path": "...",
+    #   "condition_image_path": "...", "mask_path": "...", "caption": "..."}]
+    # Compatible with HP-Image-40K (https://huggingface.co/datasets/donghao-zhou/HP-Image-40K)
     data_path:
     - /path/to/your/training_data.json
     drop_image_prob: 0.1
