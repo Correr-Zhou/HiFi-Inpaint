@@ -42,6 +42,10 @@ See `train/` directory for training scripts and configs.
 bash train/scripts/train.sh
 ```
 
+## Acknowledgements
+
+Our codebase is built upon [OminiControl](https://github.com/Yuanshi9815/OminiControl). We thank the authors for their excellent work.
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
